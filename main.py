@@ -1,10 +1,10 @@
-import unicodedata
+import sys
 
 from typing import Dict, List, Tuple
 from collections import Counter
 from Stemmer import Stemmer
-from parsing import UNICODE_NORMALIZATION, STOPWORD_TAG
-from parsing import unicode_cat_major, normalize_quotation_marks, get_stopwords, simple_tokenizer
+from parsing import STOPWORD_TAG
+from parsing import simple_tokenizer
 
 
 def choose_scored_sentences(scored_sentences: List[Tuple[int, float, List]]) -> List[Tuple[int, float, List]]:
@@ -45,17 +45,6 @@ def get_top_keywords(scored_terms: Dict, top_n=5) -> List[Tuple[int, str]]:
 
 
 def score_terms(sentences: List[List[Tuple]]) -> Dict:
-    """
-    The score of a term (~ word) is calculated as follows:
-      1. tf  -> by its term frequency
-      2. tag -> by tag (named entities and abbreviations count twice)
-      3. df  -> document frequency: in how many sentences does a term appear
-
-    :param sentences: list of list of tuples (pos, text_repr, surface_repr, underlying_repr, tag)
-    :return: dictionary with a mapping underlying_repr -> score
-    """
-
-    # mapping (ur, tag) -> [terms]
     term_frequencies = dict()
     for sentence in sentences:
         for pos, tr, sr, ur, tag in sentence:
@@ -69,9 +58,8 @@ def score_terms(sentences: List[List[Tuple]]) -> Dict:
     scores = dict()
     for term, tag in term_frequencies.keys():
         tf = term_frequencies[(term, tag)]
-        tf_count = len(tf)
+        score = len(tf)
         surface_term, _ = Counter(tf).most_common(1)[0]
-        score = tf_count
         scores[term] = (score, tag, surface_term)
 
     return scores
@@ -99,39 +87,73 @@ def summarize(text_file: str) -> Dict:
 
     return {
         'top keywords': top_keywords,
+        'original text': sentences,
         'reduced text': reduced_text,
         'reduced by': (1 - (len(reduced_text) / float(len(sentences))))
     }
 
 
-def print_summary(summary: Dict, print_scores=False, print_keywords=False, print_reduction_rate=False):
+def print_summary(summary: Dict, print_original=False, print_enumeration=False, print_scores=False,
+                  print_keywords=False, print_reduction_rate=False):
     keywords = summary['top keywords']
+    original = summary['original text']
     actual_summary = summary['reduced text']
     reduced_by = summary['reduced by']
 
-    for pos, score, sentence in actual_summary:
-        sentence_repr = ' '.join([tr for _, tr, _, _, _ in sentence])
-        if print_scores:
-            print("({}) [{:.3f}] : {}".format(pos, score, sentence_repr))
-        else:
+    if print_original:
+        print("--- Original Text ---")
+        for pos, sentence in enumerate(original):
+            sentence_repr = ' '.join([t for _, t, _, _, _ in sentence])
+            if print_enumeration:
+                sentence_repr = "({}) : {}".format(pos, sentence_repr)
             print(sentence_repr)
+        print("")
+
+    print("--- Result : Reduced Text ---")
+    for pos, score, sentence in actual_summary:
+        sentence_repr = ""
+        if print_enumeration:
+            sentence_repr += "({}) ".format(pos)
+        if print_scores:
+            sentence_repr += "[{:.3f}] ".format(score)
+        sentence_repr += ' '.join([tr for _, tr, _, _, _ in sentence])
+        print(sentence_repr)
 
     if print_keywords:
         print("")
-        print('Top 5 Keywords: {}'.format(["{}#{}".format(r, k) for r, k in keywords]))
+        print('Top Keywords: {}'.format(' '.join(["{}#{}".format(k, r) for r, k in keywords])))
+
     if print_reduction_rate:
-        print('Original text reduced by {:.2f}%'.format(100 * reduced_by))
+        print('Original content reduced by {:.2f}%.'.format(100 * reduced_by))
     print("")
 
 
 def main():
-    t1 = 'data/taiwan_passport_change-original.txt'
-    t2 = 'data/macron-refuses-to-condemn-hebdo-cartoons-original.txt'
-    t3 = 'data/us-wont-join-global-covid-vaccine-effort-original.txt'
+    args = sys.argv[1:]
 
-    for t in [t1, t2, t3]:
-        summary = summarize(t)
-        print_summary(summary, True, True, True)
+    articles = []
+    for arg in args:
+        arg = arg.strip()
+        if arg.startswith('articles/'):
+            articles.append(arg)
+        else:
+            articles.append('articles/' + arg)
+
+    summary = summarize('articles/taiwan_passport_change.txt')
+
+    '''
+    t1 = 'articles/taiwan_passport_change.txt'
+    t2 = 'articles/macron-refuses-to-condemn-hebdo-cartoons.txt'
+    t3 = 'articles/us-wont-join-global-covid-vaccine-effort.txt'
+    '''
+
+    if not articles:
+        print("No articles specified - stopping.")
+        return
+
+    for article in articles:
+        summary = summarize(article)
+        print_summary(summary, print_original=True, print_enumeration=True, print_scores=False)
 
 
 if __name__ == '__main__':
