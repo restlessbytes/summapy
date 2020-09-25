@@ -8,20 +8,23 @@ You can read about it [here](http://www.restless-bytes.com/posts/automatic-text-
 
 **Prerequisits**
 
-Please make sure that you have Python 3.7+ and [poetry](https://python-poetry.org/docs/) installed.
+* Python 3.7+
+* [poetry](https://python-poetry.org/docs/) 
 
 **Usage**
 
-1. Make sure you have all dependencies installed by running:
+1. Make sure that you have all dependencies installed by running:
 
-`poetry install`
+```
+$ poetry install
+```
 
 2. You can then either run the script on specific articles or on all 3 articles from the blog post mentioned above:
 
 ```
 # run on specific article
-poetry run python main.py articles/taiwan_passport_change.txt
+$ poetry run python main.py articles/taiwan_passport_change.txt
 
 # run on all articles
-poetry run python main.py
+$ poetry run python main.py
 ```
