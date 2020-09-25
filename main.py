@@ -19,15 +19,6 @@ def choose_scored_sentences(scored_sentences: List[Tuple[int, float, List]]) -> 
 
 def reduce_sentences(scored_sentences: List[Tuple[int, float, List[Tuple]]], n_sentences=0) \
         -> List[Tuple[int, float, List[Tuple]]]:
-    """
-    Filter sentences: remove all sentences whose score is lower than the average score of all sentences; or if
-    n_sentences is specified, return the top N sentences (score-wise).
-
-    :param scored_sentences: list of tuples (pos, score, "sentence")
-    :param n_sentences: if greater 0, return the top N sentences (instead of all sentences with above-average-score)
-
-    :return: filtered sentences in their 'chronological' text order (that is ordered by ascending position).
-    """
     # order by score, then get top sentences (whatever that means)
     if 0 < n_sentences:
         scored_sentences = sorted(scored_sentences, key=lambda t: t[1], reverse=True)[:7]
@@ -109,7 +100,7 @@ def print_summary(summary: Dict, print_original=False, print_enumeration=False, 
             print(sentence_repr)
         print("")
 
-    print("--- Result : Reduced Text ---")
+    print("--- Reduced Text ---")
     for pos, score, sentence in actual_summary:
         sentence_repr = ""
         if print_enumeration:
@@ -149,7 +140,7 @@ def main():
 
     for article in articles:
         summary = summarize(article)
-        print_summary(summary, print_original=True, print_enumeration=True, print_scores=False)
+        print_summary(summary, True, True, True, True, True)
 
 
 if __name__ == '__main__':
