@@ -139,17 +139,13 @@ def main():
         else:
             articles.append('articles/' + arg)
 
-    summary = summarize('articles/taiwan_passport_change.txt')
-
-    '''
-    t1 = 'articles/taiwan_passport_change.txt'
-    t2 = 'articles/macron-refuses-to-condemn-hebdo-cartoons.txt'
-    t3 = 'articles/us-wont-join-global-covid-vaccine-effort.txt'
-    '''
-
     if not articles:
-        print("No articles specified - stopping.")
-        return
+        print("No articles specified - using all articles in folder 'articles'")
+        articles = [
+                'articles/taiwan_passport_change.txt',
+                'articles/macron-refuses-to-condemn-hebdo-cartoons.txt',
+                'articles/us-wont-join-global-covid-vaccine-effort.txt'
+        ]
 
     for article in articles:
         summary = summarize(article)
